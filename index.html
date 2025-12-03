@@ -2,72 +2,76 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>Мульти-скрипт пример</title>
+  <title>Мой тёмный сайт</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    .block { margin-bottom: 30px; }
-    button { margin-top: 10px; }
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #0d0d0d;
+      color: #f0f0f0;
+      overflow-x: hidden;
+    }
+
+    /* Часы в левом верхнем углу */
+    #clock {
+      position: fixed;
+      top: 15px;
+      left: 20px;
+      font-size: 18px;
+      font-weight: bold;
+      color: #00ffcc;
+      text-shadow: 0 0 10px #00ffcc;
+      animation: fadeIn 2s ease-in-out;
+    }
+
+    /* Анимации */
+    h1 {
+      text-align: center;
+      margin-top: 20%;
+      font-size: 3em;
+      color: #00ffcc;
+      animation: glow 2s infinite alternate;
+    }
+
+    p {
+      text-align: center;
+      font-size: 1.2em;
+      opacity: 0;
+      animation: fadeInUp 3s forwards;
+      animation-delay: 1s;
+    }
+
+    @keyframes glow {
+      from { text-shadow: 0 0 10px #00ffcc; }
+      to { text-shadow: 0 0 30px #00ffcc, 0 0 60px #00ffcc; }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
   </style>
 </head>
 <body>
+  <div id="clock"></div>
+  <h1>Добро пожаловать!</h1>
+  <p>Это мой сайт на GitHub Pages 🎉</p>
 
-  <!-- Пара 1: Кнопка + JS -->
-  <div class="block">
-    <h2>Пара 1: Счётчик кликов</h2>
-    <button id="btn1">Нажми меня</button>
-    <p id="out1">Кликов: 0</p>
-  </div>
-
-  <!-- Пара 2: Ввод текста + JS -->
-  <div class="block">
-    <h2>Пара 2: Отображение текста</h2>
-    <input type="text" id="input2" placeholder="Напиши что-нибудь">
-    <p id="out2"></p>
-  </div>
-
-  <!-- Пара 3: Переключатель цвета + JS -->
-  <div class="block">
-    <h2>Пара 3: Переключение цвета</h2>
-    <button id="btn3">Сменить цвет</button>
-    <div id="box3" style="width:100px;height:100px;background:lightblue;"></div>
-  </div>
-
-  <!-- Пара 4: Простая математика + JS -->
-  <div class="block">
-    <h2>Пара 4: Сложение чисел</h2>
-    <input type="number" id="numA" placeholder="Число A">
-    <input type="number" id="numB" placeholder="Число B">
-    <button id="btn4">Сложить</button>
-    <p id="out4"></p>
-  </div>
-
-  <!-- Все скрипты -->
   <script>
-    // Пара 1
-    let count = 0;
-    document.getElementById("btn1").onclick = () => {
-      count++;
-      document.getElementById("out1").textContent = "Кликов: " + count;
-    };
-
-    // Пара 2
-    document.getElementById("input2").oninput = (e) => {
-      document.getElementById("out2").textContent = "Ты написал: " + e.target.value;
-    };
-
-    // Пара 3
-    document.getElementById("btn3").onclick = () => {
-      const box = document.getElementById("box3");
-      box.style.background = box.style.background === "lightblue" ? "lightgreen" : "lightblue";
-    };
-
-    // Пара 4
-    document.getElementById("btn4").onclick = () => {
-      const a = parseFloat(document.getElementById("numA").value) || 0;
-      const b = parseFloat(document.getElementById("numB").value) || 0;
-      document.getElementById("out4").textContent = "Сумма: " + (a + b);
-    };
+    function updateClock() {
+      const now = new Date();
+      // Получаем время в GMT+2
+      const options = { timeZone: 'Europe/Kiev', hour12: false };
+      const timeString = now.toLocaleTimeString('ru-RU', options);
+      document.getElementById('clock').textContent = timeString;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
   </script>
-
 </body>
 </html>
