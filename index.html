@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Мой тёмный сайт</title>
+  <title>GitHub Pages</title>
   <style>
     body {
       margin: 0;
@@ -12,7 +12,7 @@
       overflow-x: hidden;
     }
 
-    /* Часы в левом верхнем углу */
+    /* Clock in top-left corner */
     #clock {
       position: fixed;
       top: 15px;
@@ -24,21 +24,13 @@
       animation: fadeIn 2s ease-in-out;
     }
 
-    /* Анимации */
+    /* Animations */
     h1 {
       text-align: center;
       margin-top: 20%;
       font-size: 3em;
       color: #00ffcc;
       animation: glow 2s infinite alternate;
-    }
-
-    p {
-      text-align: center;
-      font-size: 1.2em;
-      opacity: 0;
-      animation: fadeInUp 3s forwards;
-      animation-delay: 1s;
     }
 
     @keyframes glow {
@@ -50,26 +42,33 @@
       from { opacity: 0; }
       to { opacity: 1; }
     }
-
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(30px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
   </style>
 </head>
 <body>
   <div id="clock"></div>
-  <h1>Добро пожаловать!</h1>
-  <p>Это мой сайт на GitHub Pages 🎉</p>
+  <h1>Welcome to GitHub Pages 🎉</h1>
 
   <script>
     function updateClock() {
       const now = new Date();
-      // Получаем время в GMT+2
-      const options = { timeZone: 'Europe/Kiev', hour12: false };
-      const timeString = now.toLocaleTimeString('ru-RU', options);
+
+      // GMT+1 (Central European Time)
+      const options = { 
+        timeZone: 'Europe/Berlin', 
+        hour12: false, 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric', 
+        hour: '2-digit', 
+        minute: '2-digit', 
+        second: '2-digit' 
+      };
+
+      const timeString = now.toLocaleString('en-GB', options);
       document.getElementById('clock').textContent = timeString;
     }
+
     setInterval(updateClock, 1000);
     updateClock();
   </script>
