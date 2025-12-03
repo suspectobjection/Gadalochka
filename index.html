@@ -24,13 +24,47 @@
       animation: fadeIn 2s ease-in-out;
     }
 
-    /* Animations */
+    /* Center content */
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+
     h1 {
-      text-align: center;
-      margin-top: 20%;
       font-size: 3em;
       color: #00ffcc;
       animation: glow 2s infinite alternate;
+      margin-bottom: 40px;
+    }
+
+    /* Days list */
+    .days {
+      display: flex;
+      gap: 15px;
+    }
+
+    .day {
+      padding: 15px 25px;
+      border-radius: 8px;
+      cursor: pointer;
+      background: #1a1a1a;
+      color: #888;
+      transition: all 0.3s ease;
+    }
+
+    .day:hover {
+      background: #333;
+      color: #fff;
+    }
+
+    .today {
+      background: #00ffcc;
+      color: #000;
+      font-weight: bold;
+      box-shadow: 0 0 15px #00ffcc;
     }
 
     @keyframes glow {
@@ -46,15 +80,16 @@
 </head>
 <body>
   <div id="clock"></div>
-  <h1>Welcome to GitHub Pages 🎉</h1>
+  <div class="container">
+    <h1>Welcome to GitHub Pages 🎉</h1>
+    <div class="days" id="daysList"></div>
+  </div>
 
   <script>
     function updateClock() {
       const now = new Date();
-
-      // GMT+1 (Central European Time)
       const options = { 
-        timeZone: 'Europe/Berlin', 
+        timeZone: 'Europe/Berlin', // GMT+1
         hour12: false, 
         weekday: 'long', 
         year: 'numeric', 
@@ -64,13 +99,31 @@
         minute: '2-digit', 
         second: '2-digit' 
       };
-
       const timeString = now.toLocaleString('en-GB', options);
       document.getElementById('clock').textContent = timeString;
     }
-
     setInterval(updateClock, 1000);
     updateClock();
+
+    // Days of the week
+    const days = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+    const todayIndex = new Date().getDay(); // Sunday=0, Monday=1...
+
+    const daysList = document.getElementById("daysList");
+    days.forEach((day, i) => {
+      const div = document.createElement("div");
+      div.classList.add("day");
+      // Adjust index because JS Sunday=0
+      if ((i === 0 && todayIndex === 1) || (i === 1 && todayIndex === 2) || 
+          (i === 2 && todayIndex === 3) || (i === 3 && todayIndex === 4) || 
+          (i === 4 && todayIndex === 5) || (i === 5 && todayIndex === 6) || 
+          (i === 6 && todayIndex === 0)) {
+        div.classList.add("today");
+      }
+      div.textContent = day;
+      div.onclick = () => alert(day + " plan coming soon...");
+      daysList.appendChild(div);
+    });
   </script>
 </body>
 </html>
