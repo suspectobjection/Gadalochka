@@ -1,457 +1,298 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <title>School Plan (by yevh)</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Расписание класса</title>
   <style>
-    :root{
-      --bg:#0d0d0d; --panel:#1a1a1a; --muted:#888; --light:#f0f0f0;
-      --primary:#00ffcc; --pastBG:#004d26; --pastText:#aaffaa;
-      --futureBG:#333; --currentBG:#ff6600; --currentText:#fff;
-      --weekendText:#ffcc00;
+    :root {
+      --bg: #0f1115;
+      --panel: #171a22;
+      --text: #e6e6e6;
+      --muted: #9aa0a6;
+      --accent: #6aa6ff;
+      --ok: #54d17a;
+      --warn: #ffb84d;
+      --border: #2a2f3a;
     }
-    body {
-      margin: 0;
-      font-family: 'Segoe UI', Arial, sans-serif;
-      background: var(--bg);
-      color: var(--light);
-      display: flex;
-      min-height: 100vh;
-    }
+    * { box-sizing: border-box; }
+    html, body { margin:0; padding:0; background:var(--bg); color:var(--text); font-family:system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif; }
+    header { padding:16px; border-bottom:1px solid var(--border); }
+    header h1 { margin:0 0 6px; font-size:22px; }
+    header p { margin:0; color:var(--muted); font-size:14px; }
 
-    /* Top-left day/date (no time) */
-    .daydate {
-      position: fixed;
-      top: 14px;
-      left: 20px;
-      color: var(--primary);
-      font-weight: 600;
-      text-shadow: 0 0 10px var(--primary);
-    }
+    .wrap { max-width:980px; margin:0 auto; padding:16px; display:grid; gap:16px; grid-template-columns: 1fr; }
+    @media (min-width: 880px) { .wrap { grid-template-columns: 2fr 1fr; } }
 
-    /* Days selector (top centered) */
-    .topbar {
-      position: fixed;
-      top: 10px;
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex;
-      gap: 10px;
-      z-index: 10;
-    }
-    .dayBtn {
-      padding: 8px 14px;
-      border-radius: 6px;
-      background: var(--panel);
-      color: var(--muted);
-      cursor: pointer;
-      transition: 0.25s;
-      border: 1px solid #222;
-      user-select: none;
-    }
-    .dayBtn:hover { background: #333; color: #fff; }
-    .dayBtn.active { background: var(--primary); color: #000; font-weight: 700; box-shadow: 0 0 12px var(--primary); }
+    .panel { background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:16px; }
+    .panel h2 { margin:0 0 12px; font-size:18px; }
+    .panel h3 { margin:16px 0 8px; font-size:16px; color:var(--muted); }
 
-    /* Valgfag selector (under days) */
-    .valgfagBar {
-      position: fixed;
-      top: 52px;
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex;
-      gap: 12px;
-      align-items: center;
-      color: var(--light);
-      font-size: 14px;
-    }
-    .vfLabel { color: var(--muted); }
-    .vfBtn {
-      padding: 6px 10px;
-      border-radius: 6px;
-      background: var(--panel);
-      color: var(--muted);
-      cursor: pointer;
-      transition: 0.25s;
-      border: 1px solid #222;
-    }
-    .vfBtn:hover { background: #333; color: #fff; }
-    .vfBtn.selected { background: #333; color: #fff; }
-    .confirmBtn {
-      padding: 6px 12px;
-      border-radius: 6px;
-      background: var(--primary);
-      color: #000;
-      font-weight: 700;
-      border: none;
-      cursor: pointer;
-      box-shadow: 0 0 10px var(--primary);
-      transition: 0.25s;
-    }
-    .confirmBtn:disabled {
-      background: #2b6f62;
-      color: #072b26;
-      box-shadow: none;
-      cursor: not-allowed;
-    }
+    .day-card { border:1px solid var(--border); border-radius:10px; overflow:hidden; margin-bottom:12px; }
+    .day-head { display:flex; align-items:center; justify-content:space-between; padding:10px 12px; background:#1c2029; border-bottom:1px solid var(--border); }
+    .day-head .name { font-weight:600; }
+    .day-head .date { color:var(--muted); font-size:13px; }
 
-    /* Big clock circle (left) */
-    .clockCircle {
-      width: 220px;
-      height: 220px;
-      border-radius: 50%;
-      border: 6px solid var(--primary);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 2.2em;
-      font-weight: 800;
-      color: var(--primary);
-      margin: 110px 20px;
-      box-shadow: 0 0 20px var(--primary);
-      letter-spacing: 1px;
-    }
+    .lessons { list-style:none; margin:0; padding:0; }
+    .lessons li { display:flex; gap:12px; align-items:center; padding:10px 12px; border-bottom:1px dashed var(--border); }
+    .lessons li:last-child { border-bottom:none; }
+    .slot { width:28px; height:28px; display:flex; align-items:center; justify-content:center; border:1px solid var(--border); border-radius:6px; color:var(--muted); font-size:13px; }
+    .subject { flex:1; font-weight:500; }
+    .valgfag { color:var(--accent); }
+    .muted { color:var(--muted); }
 
-    /* Main container */
-    .container {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      margin-top: 110px;
-      padding-bottom: 40px;
-    }
-    h1 {
-      font-size: 1.8em;
-      color: var(--primary);
-      margin-bottom: 18px;
-      text-shadow: 0 0 16px var(--primary);
-    }
-    .plan {
-      width: min(800px, 70%);
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    .item {
-      padding: 12px 16px;
-      border-radius: 10px;
-      background: var(--panel);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border: 1px solid #222;
-      transition: 0.2s;
-    }
-    .item.dimmed { filter: grayscale(0.8) brightness(0.7); color: #aaa; }
-    .past   { background: var(--pastBG);   color: var(--pastText); }
-    .future { background: var(--futureBG); color: #aaa; }
-    .current{ background: var(--currentBG); color: var(--currentText); font-weight: 700; box-shadow: 0 0 14px var(--currentBG); }
+    .row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+    select, button { background:#202532; color:var(--text); border:1px solid var(--border); border-radius:8px; padding:10px 12px; }
+    button { cursor:pointer; }
+    button.primary { background:#25406a; border-color:#30507f; }
+    button.primary:hover { background:#2a4774; }
+    .note { font-size:13px; color:var(--muted); }
 
-    .message {
-      padding: 16px;
-      border-radius: 10px;
-      text-align: center;
-      background: #222;
-      color: var(--weekendText);
-      border: 1px solid #333;
-      font-weight: 600;
-    }
+    .stats { display:grid; grid-template-columns: repeat(2, 1fr); gap:10px; }
+    .stat { padding:10px; border:1px solid var(--border); border-radius:10px; background:#1a1e26; }
+    .stat .label { font-size:12px; color:var(--muted); }
+    .stat .value { font-size:18px; font-weight:600; }
 
-    /* Sidebar stats (right) */
-    .sidebar {
-      width: 270px;
-      background: #111;
-      padding: 20px;
-      color: var(--light);
-      box-shadow: -2px 0 10px #000;
-    }
-    .sidebar h2 {
-      margin-top: 90px;
-      color: var(--primary);
-      font-size: 1.2em;
-      text-shadow: 0 0 10px var(--primary);
-    }
-    .stat { margin: 10px 0; font-size: 1.05em; color: #ddd; }
+    .ok { color:var(--ok); }
+    .warn { color:var(--warn); }
   </style>
 </head>
 <body>
-  <!-- Day and date (no time) -->
-  <div class="daydate" id="dayDate"></div>
+  <header>
+    <h1>Расписание класса</h1>
+    <p>Сегодня и завтра — с учётом выбранного Valgfag</p>
+  </header>
 
-  <!-- Days selector -->
-  <div class="topbar" id="daysSelector"></div>
+  <main class="wrap">
+    <section class="panel">
+      <h2>Ваше расписание</h2>
+      <div id="days"></div>
+    </section>
 
-  <!-- Valgfag selector -->
-  <div class="valgfagBar">
-    <div class="vfLabel">Your Valgfag:</div>
-    <div class="vfBtn" id="vfA">Mad 1 og Billed</div>
-    <div class="vfBtn" id="vfB">Mad 2 og H/D</div>
-    <button class="confirmBtn" id="confirmValgfag" disabled>Confirm</button>
-  </div>
+    <aside class="panel">
+      <h2>Valgfag (доп. урок)</h2>
+      <div class="row">
+        <select id="valgfagSelect" aria-label="Выбор доп. урока">
+          <!-- Эти названия можно заменить на ваши реальные -->
+          <option value="">— Выберите доп. урок —</option>
+          <option value="A">Design og innovation</option>
+          <option value="B">Musik</option>
+        </select>
+        <button id="confirmBtn" class="primary">Подтвердить</button>
+      </div>
+      <p class="note">Если выбран первый доп. урок — добавляется 8‑й урок в понедельник. Если второй — 8‑й урок в четверг.</p>
 
-  <!-- Big clock circle -->
-  <div class="clockCircle" id="bigClock"></div>
-
-  <!-- Center plan -->
-  <div class="container">
-    <h1 id="planTitle">School Plan (by yevh)</h1>
-    <div class="plan" id="planList"></div>
-  </div>
-
-  <!-- Sidebar -->
-  <div class="sidebar">
-    <h2>Progress</h2>
-    <div class="stat" id="elapsed"></div>
-    <div class="stat" id="remaining"></div>
-  </div>
+      <h3>Авто‑счётчик</h3>
+      <div class="stats">
+        <div class="stat">
+          <div class="label">До конца учебного периода</div>
+          <div class="value" id="weeksLeft">—</div>
+        </div>
+        <div class="stat">
+          <div class="label">Уроков этой недели</div>
+          <div class="value" id="lessonsThisWeek">—</div>
+        </div>
+      </div>
+      <p class="note" id="termNote"></p>
+    </aside>
+  </main>
 
   <script>
-    // Timezone: GMT+1 (Central Europe)
-    const tz = 'Europe/Berlin';
+    // ===== Конфиг данных =====
+    // Задай реальную дату конца периода (например, конец четверти или года).
+    // Формат: YYYY-MM-DD
+    const TERM_END = "2026-06-20";
 
-    // Days
-    const days = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
-    const todayName = new Date().toLocaleDateString('en-GB',{weekday:'long', timeZone:tz});
-    let selectedDay = todayName;
-
-    // Valgfag selection flow
-    let pendingValgfag = null;     // user-selected, not yet confirmed
-    let valgfag = localStorage.getItem('valgfagName') || null; // confirmed name
-
-    const vfA = document.getElementById('vfA');
-    const vfB = document.getElementById('vfB');
-    const confirmBtn = document.getElementById('confirmValgfag');
-
-    function chooseValgfag(name){
-      pendingValgfag = name;
-      vfA.classList.toggle('selected', name === 'Mad 1 og Billed');
-      vfB.classList.toggle('selected', name === 'Mad 2 og H/D');
-      confirmBtn.disabled = false;
-    }
-
-    vfA.onclick = () => chooseValgfag('Mad 1 og Billed');
-    vfB.onclick = () => chooseValgfag('Mad 2 og H/D');
-
-    confirmBtn.onclick = () => {
-      if(!pendingValgfag) return;
-      valgfag = pendingValgfag;
-      localStorage.setItem('valgfagName', valgfag);
-      confirmBtn.disabled = true;
-      renderAll();
+    // Базовое расписание без доп. уроков (примерные названия — поставь свои реальные)
+    // Поддерживаются: monday, wednesday, thursday, friday
+    const baseSchedule = {
+      monday: [
+        "Matematik", "Dansk", "Engelsk", "Historie", "Fysik", "Biologi", "Idræt"
+        // 8-й урок добавится динамически при Valgfag A
+      ],
+      wednesday: [
+        "Matematik", "Kemi", "Engelsk", "Geografi", "Musik", "Idræt"
+      ],
+      thursday: [
+        "Matematik", "Biologi", "Engelsk", "Geografi", "Billedkunst", "Idræt"
+        // 8-й урок добавится динамически при Valgfag B
+      ],
+      friday: [
+        "Matematik", "Fysik", "Engelsk", "Historie", "Idræt", "Klassens time"
+      ]
     };
 
-    // Mark selected if already confirmed from storage
-    if(valgfag){
-      chooseValgfag(valgfag);
-      confirmBtn.disabled = true;
+    // Названия доп. уроков (первый влияет на понедельник, второй — на четверг)
+    const VALGFAG_OPTIONS = {
+      A: "Design og innovation", // первый
+      B: "Musik"                 // второй
+    };
+
+    // ===== Вспомогательные =====
+    const dayNames = {
+      0: "Воскресенье", 1: "Понедельник", 2: "Вторник", 3: "Среда", 4: "Четверг", 5: "Пятница", 6: "Суббота"
+    };
+    const keyByWeekday = {
+      1: "monday",
+      3: "wednesday",
+      4: "thursday",
+      5: "friday"
+    };
+
+    function formatDate(d) {
+      return d.toLocaleDateString("ru-RU", { day: "2-digit", month: "2-digit", year: "numeric" });
     }
 
-    // Build day/date (no time)
-    function updateDayDate(){
+    function clone(obj) {
+      return JSON.parse(JSON.stringify(obj));
+    }
+
+    // Добавляет Valgfag как 8-й урок в нужный день
+    function applyValgfag(schedule, selectedKey) {
+      if (!selectedKey) return schedule;
+      const name = VALGFAG_OPTIONS[selectedKey];
+      if (!name) return schedule;
+
+      if (selectedKey === "A") {
+        // первый — 8-й урок в понедельник
+        const arr = schedule.monday ?? (schedule.monday = []);
+        if (arr.length < 8) arr.push(name);
+      } else if (selectedKey === "B") {
+        // второй — 8-й урок в четверг
+        const arr = schedule.thursday ?? (schedule.thursday = []);
+        if (arr.length < 8) arr.push(name);
+      }
+      return schedule;
+    }
+
+    // Возвращает массив из двух дат: сегодня и завтра
+    function getTodayAndTomorrow() {
       const now = new Date();
-      const label = now.toLocaleDateString('en-GB', {
-        weekday:'long', year:'numeric', month:'long', day:'numeric', timeZone:tz
-      });
-      document.getElementById('dayDate').textContent = label;
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+      return [today, tomorrow];
     }
 
-    // Big clock circle
-    function updateBigClock(){
+    // Строит карточку дня
+    function renderDayCard(container, date, scheduleForDay, valgfagKey) {
+      const weekday = date.getDay(); // 0..6
+      const dayName = dayNames[weekday];
+
+      const card = document.createElement("div");
+      card.className = "day-card";
+
+      const head = document.createElement("div");
+      head.className = "day-head";
+      const nameEl = document.createElement("div");
+      nameEl.className = "name";
+      nameEl.textContent = dayName;
+      const dateEl = document.createElement("div");
+      dateEl.className = "date";
+      dateEl.textContent = formatDate(date);
+      head.appendChild(nameEl);
+      head.appendChild(dateEl);
+
+      const list = document.createElement("ul");
+      list.className = "lessons";
+
+      const subjects = scheduleForDay || [];
+      if (subjects.length === 0) {
+        const li = document.createElement("li");
+        li.innerHTML = '<span class="muted">Нет уроков</span>';
+        list.appendChild(li);
+      } else {
+        subjects.forEach((subj, idx) => {
+          const li = document.createElement("li");
+          const slot = document.createElement("div");
+          slot.className = "slot";
+          slot.textContent = (idx + 1);
+          const subject = document.createElement("div");
+          subject.className = "subject" + (isValgfagLabel(subj) ? " valgfag" : "");
+          subject.textContent = subj;
+          li.appendChild(slot);
+          li.appendChild(subject);
+          list.appendChild(li);
+        });
+      }
+
+      card.appendChild(head);
+      card.appendChild(list);
+      container.appendChild(card);
+    }
+
+    function isValgfagLabel(name) {
+      // Подсветка доп. урока, если совпадает с выбранными названиями
+      return Object.values(VALGFAG_OPTIONS).includes(name);
+    }
+
+    function computeLessonsThisWeek(schedule) {
+      const keys = ["monday", "wednesday", "thursday", "friday"];
+      return keys.reduce((acc, k) => acc + ((schedule[k]?.length) || 0), 0);
+    }
+
+    function weeksUntilTermEnd(termEndStr) {
+      const end = new Date(termEndStr + "T23:59:59");
       const now = new Date();
-      const time = now.toLocaleTimeString('en-GB', {
-        hour12:false, hour:'2-digit', minute:'2-digit', second:'2-digit', timeZone:tz
-      });
-      document.getElementById('bigClock').textContent = time;
+      const ms = end - now;
+      if (isNaN(end.getTime())) return null;
+      if (ms <= 0) return 0;
+      const weeks = Math.ceil(ms / (7 * 24 * 60 * 60 * 1000));
+      return weeks;
     }
 
-    // Topbar days
-    const daysSelector = document.getElementById('daysSelector');
-    days.forEach(day=>{
-      const div=document.createElement('div');
-      div.className='dayBtn';
-      div.textContent=day;
-      if(day===selectedDay) div.classList.add('active');
-      div.onclick=()=>{
-        selectedDay=day;
-        document.querySelectorAll('.dayBtn').forEach(b=>b.classList.remove('active'));
-        div.classList.add('active');
+    // ===== Рендер =====
+    const daysRoot = document.getElementById("days");
+    const valgfagSelect = document.getElementById("valgfagSelect");
+    const confirmBtn = document.getElementById("confirmBtn");
+    const weeksLeftEl = document.getElementById("weeksLeft");
+    const lessonsThisWeekEl = document.getElementById("lessonsThisWeek");
+    const termNoteEl = document.getElementById("termNote");
+
+    let selectedValgfagKey = ""; // "" | "A" | "B"
+
+    function renderAll() {
+      // Копируем базовое и применяем выбранный доп. урок
+      const schedule = applyValgfag(clone(baseSchedule), selectedValgfagKey);
+
+      // Обновляем счётчики
+      const weeks = weeksUntilTermEnd(TERM_END);
+      weeksLeftEl.textContent = (weeks == null) ? "—" : (weeks === 0 ? "Период завершён" : weeks + " нед.");
+      termNoteEl.textContent = (weeks == null)
+        ? "Укажи корректную дату окончания периода в коде (TERM_END)."
+        : (weeks === 0 ? "Новый период скоро начнётся — обнови TERM_END." : "Счёт идёт до " + new Date(TERM_END).toLocaleDateString("ru-RU"));
+
+      lessonsThisWeekEl.textContent = computeLessonsThisWeek(schedule);
+
+      // Рендерим только сегодня и завтра
+      daysRoot.innerHTML = "";
+      const [today, tomorrow] = getTodayAndTomorrow();
+
+      [today, tomorrow].forEach(date => {
+        const wd = date.getDay(); // 1..5 — будни
+        const key = keyByWeekday[wd];
+        const subjects = key ? schedule[key] : [];
+        renderDayCard(daysRoot, date, subjects, selectedValgfagKey);
+      });
+    }
+
+    confirmBtn.addEventListener("click", () => {
+      const chosen = valgfagSelect.value;
+      if (!chosen) {
+        alert("Выберите доп. урок из списка.");
+        return;
+      }
+      const label = VALGFAG_OPTIONS[chosen];
+      const msg =
+        chosen === "A"
+          ? `Подтвердить: добавить "${label}" как 8‑й урок в понедельник?`
+          : `Подтвердить: добавить "${label}" как 8‑й урок в четверг?`;
+      if (confirm(msg)) {
+        selectedValgfagKey = chosen;
         renderAll();
-      };
-      daysSelector.appendChild(div);
+      }
     });
 
-    // Wednesday schedule (from earlier)
-    const wednesdaySchedule = [
-      { start: "08:00", end: "08:45", subject: "Matematik DB/TH" },
-      { start: "08:45", end: "09:30", subject: "Matematik DB/TH" },
-      { start: "09:30", end: "10:00", subject: "Break" },
-      { start: "10:00", end: "10:45", subject: "Biologi MAK" },
-      { start: "10:45", end: "11:30", subject: "Biologi MAK" },
-      { start: "11:30", end: "12:00", subject: "Break" },
-      { start: "12:00", end: "12:45", subject: "Dansk PW" },
-      { start: "12:45", end: "13:30", subject: "Dansk PW" },
-      { start: "13:30", end: "13:45", subject: "Break" },
-      { start: "13:45", end: "14:30", subject: "Tysk CB" },
-      { start: "14:30", end: "15:15", subject: "Tysk CB" }
-    ];
-
-    // Thursday base (6 lessons, end 13:30); if Valgfag = "Mad 2 og H/D", add 2 extra (7 & 8)
-    const thursdayBase6 = [
-      { start: "08:00", end: "08:45", subject: "Dansk PW" },
-      { start: "08:45", end: "09:30", subject: "Geografi MAK" },
-      { start: "09:30", end: "10:00", subject: "Break" },
-      { start: "10:00", end: "10:45", subject: "Tysk CB" },
-      { start: "10:45", end: "11:30", subject: "Englesk DB" },
-      { start: "11:30", end: "12:00", subject: "Break" },
-      { start: "12:00", end: "12:45", subject: "Tysk CB" },
-      { start: "12:45", end: "13:30", subject: "Englesk DB" }
-    ];
-    const thursdayValgfagExtra = [
-      { start: "13:30", end: "13:45", subject: "Break" },
-      { start: "13:45", end: "14:30", subject: "MAD 2 og H/D" },
-      { start: "14:30", end: "15:15", subject: "MAD 2 og H/D" }
-    ];
-
-    function getScheduleFor(day){
-      if(day==="Wednesday") return wednesdaySchedule;
-      if(day==="Thursday"){
-        // If confirmed Valgfag is "Mad 2 og H/D", show 8 lessons; otherwise keep base 6.
-        return valgfag === 'Mad 2 og H/D' ? thursdayBase6.concat(thursdayValgfagExtra) : thursdayBase6;
-      }
-      // Other days pending — show "Not today"
-      return [];
-    }
-
-    function parseTimeHM(str){
-      const [h,m]=str.split(":").map(Number);
-      const d=new Date();
-      d.setHours(h,m,0,0);
-      return d;
-    }
-
-    function isWeekend(day){ return day==="Saturday" || day==="Sunday"; }
-
-    function renderPlan(){
-      const planTitle = document.getElementById('planTitle');
-      const planList = document.getElementById('planList');
-      planList.innerHTML = "";
-      planTitle.textContent = `School Plan (by yevh) - ${selectedDay}`;
-
-      // Weekend message
-      if(isWeekend(selectedDay)){
-        const msg = document.createElement('div');
-        msg.className = 'message';
-        msg.textContent = "Weekend — no school plan 🎉";
-        planList.appendChild(msg);
-        return;
-      }
-
-      const schedule = getScheduleFor(selectedDay);
-      const now = new Date();
-
-      // If valgfag not confirmed yet, show dimmed schedule with message
-      const valgfagConfirmed = !!valgfag;
-
-      if(schedule.length === 0){
-        const msg = document.createElement('div');
-        msg.className = 'message';
-        msg.textContent = "Not today — plan not available yet";
-        planList.appendChild(msg);
-        return;
-      }
-
-      const isTodaySelected = selectedDay === new Date().toLocaleDateString('en-GB',{weekday:'long', timeZone:tz});
-
-      schedule.forEach(item=>{
-        const start = parseTimeHM(item.start);
-        const end   = parseTimeHM(item.end);
-        const div = document.createElement('div');
-        div.className = 'item';
-        div.innerHTML = `<span>${item.start} - ${item.end}</span><span>${item.subject}</span>`;
-
-        // If valgfag not confirmed, keep everything dimmed
-        if(!valgfagConfirmed){
-          div.classList.add('dimmed');
-        } else if(!isTodaySelected){
-          div.classList.add('dimmed');
-        } else {
-          if(now > end){ div.classList.add('past'); }
-          else if(now >= start && now <= end){ div.classList.add('current'); }
-          else { div.classList.add('future'); }
-        }
-
-        planList.appendChild(div);
-      });
-
-      if(!valgfagConfirmed){
-        const msg = document.createElement('div');
-        msg.className = 'message';
-        msg.style.marginTop = '8px';
-        msg.textContent = "Confirm your Valgfag to show today’s lessons";
-        planList.appendChild(msg);
-      } else if(!isTodaySelected){
-        const msg = document.createElement('div');
-        msg.className = 'message';
-        msg.style.marginTop = '8px';
-        msg.textContent = "Not today — plan shown for reference";
-        planList.appendChild(msg);
-      }
-    }
-
-    function updateProgress(){
-      const elapsedEl = document.getElementById('elapsed');
-      const remainingEl = document.getElementById('remaining');
-
-      // If valgfag not confirmed, no progress
-      if(!valgfag){
-        elapsedEl.textContent = "Elapsed: 0h 0m";
-        remainingEl.textContent = "Remaining: Confirm Valgfag";
-        return;
-      }
-
-      if(isWeekend(selectedDay)){
-        elapsedEl.textContent = "Elapsed: 0h 0m";
-        remainingEl.textContent = "Remaining: Free day!";
-        return;
-      }
-
-      const schedule = getScheduleFor(selectedDay);
-      if(schedule.length === 0){
-        elapsedEl.textContent = "Elapsed: 0h 0m";
-        remainingEl.textContent = "Remaining: Not scheduled";
-        return;
-      }
-
-      const start = parseTimeHM(schedule[0].start);
-      const end   = parseTimeHM(schedule[schedule.length-1].end);
-      const now   = new Date();
-      let elapsedMin = 0, remainingMin = 0;
-
-      if(now <= start){ elapsedMin = 0; remainingMin = (end - start)/60000; }
-      else if(now >= end){ elapsedMin = (end - start)/60000; remainingMin = 0; }
-      else{ elapsedMin = (now - start)/60000; remainingMin = (end - now)/60000; }
-
-      const eh = Math.floor(elapsedMin/60), em = Math.floor(elapsedMin%60);
-      const rh = Math.floor(remainingMin/60), rm = Math.floor(remainingMin%60);
-
-      elapsedEl.textContent   = `Elapsed: ${eh}h ${em}m`;
-      remainingEl.textContent = `Remaining: ${rh}h ${rm}m`;
-    }
-
-    function renderAll(){
-      updateDayDate();
-      renderPlan();
-      updateProgress();
-    }
-
-    // Tick updates
-    setInterval(()=>{
-      updateBigClock();
-      renderAll();
-    }, 1000);
-
-    // Initial paint
-    updateBigClock();
+    // Первый рендер
     renderAll();
   </script>
 </body>
