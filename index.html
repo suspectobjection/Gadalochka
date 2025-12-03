@@ -59,7 +59,7 @@
       left: 50%;
       transform: translateX(-50%);
       display: flex;
-      gap: 14px;
+      gap: 12px;
       align-items: center;
       color: var(--light);
       font-size: 14px;
@@ -75,7 +75,24 @@
       border: 1px solid #222;
     }
     .vfBtn:hover { background: #333; color: #fff; }
-    .vfBtn.active { background: var(--primary); color: #000; font-weight: 700; box-shadow: 0 0 10px var(--primary); }
+    .vfBtn.selected { background: #333; color: #fff; }
+    .confirmBtn {
+      padding: 6px 12px;
+      border-radius: 6px;
+      background: var(--primary);
+      color: #000;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 0 10px var(--primary);
+      transition: 0.25s;
+    }
+    .confirmBtn:disabled {
+      background: #2b6f62;
+      color: #072b26;
+      box-shadow: none;
+      cursor: not-allowed;
+    }
 
     /* Big clock circle (left) */
     .clockCircle {
@@ -167,8 +184,9 @@
   <!-- Valgfag selector -->
   <div class="valgfagBar">
     <div class="vfLabel">Your Valgfag:</div>
-    <div class="vfBtn" id="vf1">1 Valgfag - Mad 1 og Billed</div>
-    <div class="vfBtn" id="vf2">2 Valgfag - Mad 2 og H/D</div>
+    <div class="vfBtn" id="vfA">Mad 1 og Billed</div>
+    <div class="vfBtn" id="vfB">Mad 2 og H/D</div>
+    <button class="confirmBtn" id="confirmValgfag" disabled>Confirm</button>
   </div>
 
   <!-- Big clock circle -->
@@ -196,23 +214,39 @@
     const todayName = new Date().toLocaleDateString('en-GB',{weekday:'long', timeZone:tz});
     let selectedDay = todayName;
 
-    // Valgfag selection (default: none; user chooses)
-    let valgfag = localStorage.getItem('valgfag') || '2'; // default to 2 so Thursday shows 8 lessons per your request
-    const vf1Btn = document.getElementById('vf1');
-    const vf2Btn = document.getElementById('vf2');
+    // Valgfag selection flow
+    let pendingValgfag = null;     // user-selected, not yet confirmed
+    let valgfag = localStorage.getItem('valgfagName') || null; // confirmed name
 
-    function setValgfag(v){
-      valgfag = v;
-      localStorage.setItem('valgfag', v);
-      vf1Btn.classList.toggle('active', v==='1');
-      vf2Btn.classList.toggle('active', v==='2');
-      renderAll();
+    const vfA = document.getElementById('vfA');
+    const vfB = document.getElementById('vfB');
+    const confirmBtn = document.getElementById('confirmValgfag');
+
+    function chooseValgfag(name){
+      pendingValgfag = name;
+      vfA.classList.toggle('selected', name === 'Mad 1 og Billed');
+      vfB.classList.toggle('selected', name === 'Mad 2 og H/D');
+      confirmBtn.disabled = false;
     }
-    vf1Btn.onclick = () => setValgfag('1');
-    vf2Btn.onclick = () => setValgfag('2');
-    setValgfag(valgfag);
 
-    // Build day/date (no time) in top-left
+    vfA.onclick = () => chooseValgfag('Mad 1 og Billed');
+    vfB.onclick = () => chooseValgfag('Mad 2 og H/D');
+
+    confirmBtn.onclick = () => {
+      if(!pendingValgfag) return;
+      valgfag = pendingValgfag;
+      localStorage.setItem('valgfagName', valgfag);
+      confirmBtn.disabled = true;
+      renderAll();
+    };
+
+    // Mark selected if already confirmed from storage
+    if(valgfag){
+      chooseValgfag(valgfag);
+      confirmBtn.disabled = true;
+    }
+
+    // Build day/date (no time)
     function updateDayDate(){
       const now = new Date();
       const label = now.toLocaleDateString('en-GB', {
@@ -246,8 +280,7 @@
       daysSelector.appendChild(div);
     });
 
-    // Schedules
-    // Wednesday from your earlier plan (reference)
+    // Wednesday schedule (from earlier)
     const wednesdaySchedule = [
       { start: "08:00", end: "08:45", subject: "Matematik DB/TH" },
       { start: "08:45", end: "09:30", subject: "Matematik DB/TH" },
@@ -262,15 +295,7 @@
       { start: "14:30", end: "15:15", subject: "Tysk CB" }
     ];
 
-    // Thursday plan: base 6 lessons end 13:30; if Valgfag=2, add two lessons (7 & 8)
-    // Provided subjects:
-    // 1 Dansk PW
-    // 2 Geografi MAK
-    // 3 Tysk CB
-    // 4 Englesk DB
-    // 5 Tysk CB
-    // 6 Englesk DB
-    // ValgFag 2: 7 MAD 2 og H/D, 8 MAD 2 og H/D
+    // Thursday base (6 lessons, end 13:30); if Valgfag = "Mad 2 og H/D", add 2 extra (7 & 8)
     const thursdayBase6 = [
       { start: "08:00", end: "08:45", subject: "Dansk PW" },
       { start: "08:45", end: "09:30", subject: "Geografi MAK" },
@@ -290,17 +315,16 @@
     function getScheduleFor(day){
       if(day==="Wednesday") return wednesdaySchedule;
       if(day==="Thursday"){
-        // If Valgfag 2 selected, include 8 lessons (6 + 2 extra); if 1, keep 6 (extra move to Monday later)
-        return valgfag === '2' ? thursdayBase6.concat(thursdayValgfagExtra) : thursdayBase6;
+        // If confirmed Valgfag is "Mad 2 og H/D", show 8 lessons; otherwise keep base 6.
+        return valgfag === 'Mad 2 og H/D' ? thursdayBase6.concat(thursdayValgfagExtra) : thursdayBase6;
       }
-      // For Monday: later we will add extra for Valgfag 1. For now: "Not today".
+      // Other days pending — show "Not today"
       return [];
     }
 
     function parseTimeHM(str){
       const [h,m]=str.split(":").map(Number);
       const d=new Date();
-      // respect timezone for display; for calculations local is fine since we only compare same-day HM
       d.setHours(h,m,0,0);
       return d;
     }
@@ -325,8 +349,10 @@
       const schedule = getScheduleFor(selectedDay);
       const now = new Date();
 
+      // If valgfag not confirmed yet, show dimmed schedule with message
+      const valgfagConfirmed = !!valgfag;
+
       if(schedule.length === 0){
-        // Not today message for days without plan yet
         const msg = document.createElement('div');
         msg.className = 'message';
         msg.textContent = "Not today — plan not available yet";
@@ -334,7 +360,6 @@
         return;
       }
 
-      // If user clicks a day different from today's day, dim all items and show "Not today"
       const isTodaySelected = selectedDay === new Date().toLocaleDateString('en-GB',{weekday:'long', timeZone:tz});
 
       schedule.forEach(item=>{
@@ -344,7 +369,10 @@
         div.className = 'item';
         div.innerHTML = `<span>${item.start} - ${item.end}</span><span>${item.subject}</span>`;
 
-        if(!isTodaySelected){
+        // If valgfag not confirmed, keep everything dimmed
+        if(!valgfagConfirmed){
+          div.classList.add('dimmed');
+        } else if(!isTodaySelected){
           div.classList.add('dimmed');
         } else {
           if(now > end){ div.classList.add('past'); }
@@ -355,11 +383,17 @@
         planList.appendChild(div);
       });
 
-      if(!isTodaySelected){
+      if(!valgfagConfirmed){
         const msg = document.createElement('div');
         msg.className = 'message';
         msg.style.marginTop = '8px';
-        msg.textContent = "Not today — plan not available yet";
+        msg.textContent = "Confirm your Valgfag to show today’s lessons";
+        planList.appendChild(msg);
+      } else if(!isTodaySelected){
+        const msg = document.createElement('div');
+        msg.className = 'message';
+        msg.style.marginTop = '8px';
+        msg.textContent = "Not today — plan shown for reference";
         planList.appendChild(msg);
       }
     }
@@ -367,6 +401,13 @@
     function updateProgress(){
       const elapsedEl = document.getElementById('elapsed');
       const remainingEl = document.getElementById('remaining');
+
+      // If valgfag not confirmed, no progress
+      if(!valgfag){
+        elapsedEl.textContent = "Elapsed: 0h 0m";
+        remainingEl.textContent = "Remaining: Confirm Valgfag";
+        return;
+      }
 
       if(isWeekend(selectedDay)){
         elapsedEl.textContent = "Elapsed: 0h 0m";
