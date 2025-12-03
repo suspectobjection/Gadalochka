@@ -4,97 +4,175 @@
   <meta charset="UTF-8">
   <title>School Plan (by yevh)</title>
   <style>
+    :root{
+      --bg:#0d0d0d; --panel:#1a1a1a; --muted:#888; --light:#f0f0f0;
+      --primary:#00ffcc; --pastBG:#004d26; --pastText:#aaffaa;
+      --futureBG:#333; --currentBG:#ff6600; --currentText:#fff;
+      --weekendText:#ffcc00;
+    }
     body {
       margin: 0;
       font-family: 'Segoe UI', Arial, sans-serif;
-      background: #0d0d0d;
-      color: #f0f0f0;
+      background: var(--bg);
+      color: var(--light);
       display: flex;
+      min-height: 100vh;
     }
 
-    /* Top bar with days */
+    /* Top-left day/date (no time) */
+    .daydate {
+      position: fixed;
+      top: 14px;
+      left: 20px;
+      color: var(--primary);
+      font-weight: 600;
+      text-shadow: 0 0 10px var(--primary);
+    }
+
+    /* Days selector (top centered) */
     .topbar {
       position: fixed;
       top: 10px;
       left: 50%;
       transform: translateX(-50%);
       display: flex;
-      gap: 15px;
+      gap: 10px;
+      z-index: 10;
     }
-    .day {
-      padding: 8px 15px;
+    .dayBtn {
+      padding: 8px 14px;
       border-radius: 6px;
-      background: #1a1a1a;
-      color: #888;
+      background: var(--panel);
+      color: var(--muted);
       cursor: pointer;
-      transition: 0.3s;
+      transition: 0.25s;
+      border: 1px solid #222;
+      user-select: none;
     }
-    .day:hover { background: #333; color: #fff; }
-    .active { background: #00ffcc; color: #000; font-weight: bold; }
+    .dayBtn:hover { background: #333; color: #fff; }
+    .dayBtn.active { background: var(--primary); color: #000; font-weight: 700; box-shadow: 0 0 12px var(--primary); }
 
-    /* Clock circle */
-    .clock-circle {
-      width: 200px;
-      height: 200px;
+    /* Valgfag selector (under days) */
+    .valgfagBar {
+      position: fixed;
+      top: 52px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      color: var(--light);
+      font-size: 14px;
+    }
+    .vfLabel { color: var(--muted); }
+    .vfBtn {
+      padding: 6px 10px;
+      border-radius: 6px;
+      background: var(--panel);
+      color: var(--muted);
+      cursor: pointer;
+      transition: 0.25s;
+      border: 1px solid #222;
+    }
+    .vfBtn:hover { background: #333; color: #fff; }
+    .vfBtn.active { background: var(--primary); color: #000; font-weight: 700; box-shadow: 0 0 10px var(--primary); }
+
+    /* Big clock circle (left) */
+    .clockCircle {
+      width: 220px;
+      height: 220px;
       border-radius: 50%;
-      border: 6px solid #00ffcc;
+      border: 6px solid var(--primary);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 2em;
-      font-weight: bold;
-      color: #00ffcc;
-      margin: 100px 20px;
-      box-shadow: 0 0 20px #00ffcc;
+      font-size: 2.2em;
+      font-weight: 800;
+      color: var(--primary);
+      margin: 110px 20px;
+      box-shadow: 0 0 20px var(--primary);
+      letter-spacing: 1px;
     }
 
-    /* Center plan */
+    /* Main container */
     .container {
       flex: 1;
       display: flex;
       flex-direction: column;
       align-items: center;
-      margin-top: 80px;
+      margin-top: 110px;
+      padding-bottom: 40px;
     }
     h1 {
-      font-size: 2em;
-      color: #00ffcc;
-      margin-bottom: 20px;
+      font-size: 1.8em;
+      color: var(--primary);
+      margin-bottom: 18px;
+      text-shadow: 0 0 16px var(--primary);
     }
     .plan {
-      width: 60%;
+      width: min(800px, 70%);
       display: flex;
       flex-direction: column;
       gap: 10px;
     }
     .item {
-      padding: 12px 20px;
-      border-radius: 8px;
-      background: #1a1a1a;
+      padding: 12px 16px;
+      border-radius: 10px;
+      background: var(--panel);
       display: flex;
       justify-content: space-between;
+      align-items: center;
+      border: 1px solid #222;
+      transition: 0.2s;
     }
-    .past { background: #004d26; color: #aaffaa; }
-    .future { background: #333; color: #aaa; }
-    .current { background: #ff6600; color: #fff; font-weight: bold; box-shadow: 0 0 15px #ff6600; }
+    .item.dimmed { filter: grayscale(0.8) brightness(0.7); color: #aaa; }
+    .past   { background: var(--pastBG);   color: var(--pastText); }
+    .future { background: var(--futureBG); color: #aaa; }
+    .current{ background: var(--currentBG); color: var(--currentText); font-weight: 700; box-shadow: 0 0 14px var(--currentBG); }
 
-    /* Sidebar stats */
+    .message {
+      padding: 16px;
+      border-radius: 10px;
+      text-align: center;
+      background: #222;
+      color: var(--weekendText);
+      border: 1px solid #333;
+      font-weight: 600;
+    }
+
+    /* Sidebar stats (right) */
     .sidebar {
-      width: 250px;
+      width: 270px;
       background: #111;
       padding: 20px;
-      color: #f0f0f0;
+      color: var(--light);
       box-shadow: -2px 0 10px #000;
     }
-    .stat { margin: 10px 0; font-size: 1.1em; }
+    .sidebar h2 {
+      margin-top: 90px;
+      color: var(--primary);
+      font-size: 1.2em;
+      text-shadow: 0 0 10px var(--primary);
+    }
+    .stat { margin: 10px 0; font-size: 1.05em; color: #ddd; }
   </style>
 </head>
 <body>
+  <!-- Day and date (no time) -->
+  <div class="daydate" id="dayDate"></div>
+
   <!-- Days selector -->
   <div class="topbar" id="daysSelector"></div>
 
-  <!-- Clock circle -->
-  <div class="clock-circle" id="bigClock"></div>
+  <!-- Valgfag selector -->
+  <div class="valgfagBar">
+    <div class="vfLabel">Your Valgfag:</div>
+    <div class="vfBtn" id="vf1">1 Valgfag - Mad 1 og Billed</div>
+    <div class="vfBtn" id="vf2">2 Valgfag - Mad 2 og H/D</div>
+  </div>
+
+  <!-- Big clock circle -->
+  <div class="clockCircle" id="bigClock"></div>
 
   <!-- Center plan -->
   <div class="container">
@@ -105,99 +183,235 @@
   <!-- Sidebar -->
   <div class="sidebar">
     <h2>Progress</h2>
-    <div class="stat" id="done"></div>
-    <div class="stat" id="left"></div>
+    <div class="stat" id="elapsed"></div>
+    <div class="stat" id="remaining"></div>
   </div>
 
   <script>
-    // Schedules for days (example: only Wednesday filled)
-    const schedules = {
-      "Wednesday": [
-        { start: "08:00", end: "08:45", subject: "Matematik DB/TH" },
-        { start: "08:45", end: "09:30", subject: "Matematik DB/TH" },
-        { start: "09:30", end: "10:00", subject: "Break" },
-        { start: "10:00", end: "10:45", subject: "Biologi MAK" },
-        { start: "10:45", end: "11:30", subject: "Biologi MAK" },
-        { start: "11:30", end: "12:00", subject: "Break" },
-        { start: "12:00", end: "12:45", subject: "Dansk PW" },
-        { start: "12:45", end: "13:30", subject: "Dansk PW" },
-        { start: "13:30", end: "13:45", subject: "Break" },
-        { start: "13:45", end: "14:30", subject: "Tysk CB" },
-        { start: "14:30", end: "15:15", subject: "Tysk CB" }
-      ]
-    };
+    // Timezone: GMT+1 (Central Europe)
+    const tz = 'Europe/Berlin';
 
+    // Days
     const days = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
-    const todayName = new Date().toLocaleDateString('en-GB',{weekday:'long', timeZone:'Europe/Berlin'});
+    const todayName = new Date().toLocaleDateString('en-GB',{weekday:'long', timeZone:tz});
     let selectedDay = todayName;
 
-    // Render days selector
-    const daysSelector = document.getElementById("daysSelector");
+    // Valgfag selection (default: none; user chooses)
+    let valgfag = localStorage.getItem('valgfag') || '2'; // default to 2 so Thursday shows 8 lessons per your request
+    const vf1Btn = document.getElementById('vf1');
+    const vf2Btn = document.getElementById('vf2');
+
+    function setValgfag(v){
+      valgfag = v;
+      localStorage.setItem('valgfag', v);
+      vf1Btn.classList.toggle('active', v==='1');
+      vf2Btn.classList.toggle('active', v==='2');
+      renderAll();
+    }
+    vf1Btn.onclick = () => setValgfag('1');
+    vf2Btn.onclick = () => setValgfag('2');
+    setValgfag(valgfag);
+
+    // Build day/date (no time) in top-left
+    function updateDayDate(){
+      const now = new Date();
+      const label = now.toLocaleDateString('en-GB', {
+        weekday:'long', year:'numeric', month:'long', day:'numeric', timeZone:tz
+      });
+      document.getElementById('dayDate').textContent = label;
+    }
+
+    // Big clock circle
+    function updateBigClock(){
+      const now = new Date();
+      const time = now.toLocaleTimeString('en-GB', {
+        hour12:false, hour:'2-digit', minute:'2-digit', second:'2-digit', timeZone:tz
+      });
+      document.getElementById('bigClock').textContent = time;
+    }
+
+    // Topbar days
+    const daysSelector = document.getElementById('daysSelector');
     days.forEach(day=>{
-      const div=document.createElement("div");
-      div.classList.add("day");
-      if(day===selectedDay) div.classList.add("active");
+      const div=document.createElement('div');
+      div.className='dayBtn';
       div.textContent=day;
-      div.onclick=()=>{selectedDay=day; renderPlan(); updateProgress();};
+      if(day===selectedDay) div.classList.add('active');
+      div.onclick=()=>{
+        selectedDay=day;
+        document.querySelectorAll('.dayBtn').forEach(b=>b.classList.remove('active'));
+        div.classList.add('active');
+        renderAll();
+      };
       daysSelector.appendChild(div);
     });
 
-    // Clock circle
-    function updateBigClock(){
-      const now=new Date();
-      const options={timeZone:'Europe/Berlin',hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'};
-      document.getElementById("bigClock").textContent=now.toLocaleTimeString('en-GB',options);
-    }
-    setInterval(updateBigClock,1000);
-    updateBigClock();
+    // Schedules
+    // Wednesday from your earlier plan (reference)
+    const wednesdaySchedule = [
+      { start: "08:00", end: "08:45", subject: "Matematik DB/TH" },
+      { start: "08:45", end: "09:30", subject: "Matematik DB/TH" },
+      { start: "09:30", end: "10:00", subject: "Break" },
+      { start: "10:00", end: "10:45", subject: "Biologi MAK" },
+      { start: "10:45", end: "11:30", subject: "Biologi MAK" },
+      { start: "11:30", end: "12:00", subject: "Break" },
+      { start: "12:00", end: "12:45", subject: "Dansk PW" },
+      { start: "12:45", end: "13:30", subject: "Dansk PW" },
+      { start: "13:30", end: "13:45", subject: "Break" },
+      { start: "13:45", end: "14:30", subject: "Tysk CB" },
+      { start: "14:30", end: "15:15", subject: "Tysk CB" }
+    ];
 
-    // Helpers
-    function parseTime(str){
+    // Thursday plan: base 6 lessons end 13:30; if Valgfag=2, add two lessons (7 & 8)
+    // Provided subjects:
+    // 1 Dansk PW
+    // 2 Geografi MAK
+    // 3 Tysk CB
+    // 4 Englesk DB
+    // 5 Tysk CB
+    // 6 Englesk DB
+    // ValgFag 2: 7 MAD 2 og H/D, 8 MAD 2 og H/D
+    const thursdayBase6 = [
+      { start: "08:00", end: "08:45", subject: "Dansk PW" },
+      { start: "08:45", end: "09:30", subject: "Geografi MAK" },
+      { start: "09:30", end: "10:00", subject: "Break" },
+      { start: "10:00", end: "10:45", subject: "Tysk CB" },
+      { start: "10:45", end: "11:30", subject: "Englesk DB" },
+      { start: "11:30", end: "12:00", subject: "Break" },
+      { start: "12:00", end: "12:45", subject: "Tysk CB" },
+      { start: "12:45", end: "13:30", subject: "Englesk DB" }
+    ];
+    const thursdayValgfagExtra = [
+      { start: "13:30", end: "13:45", subject: "Break" },
+      { start: "13:45", end: "14:30", subject: "MAD 2 og H/D" },
+      { start: "14:30", end: "15:15", subject: "MAD 2 og H/D" }
+    ];
+
+    function getScheduleFor(day){
+      if(day==="Wednesday") return wednesdaySchedule;
+      if(day==="Thursday"){
+        // If Valgfag 2 selected, include 8 lessons (6 + 2 extra); if 1, keep 6 (extra move to Monday later)
+        return valgfag === '2' ? thursdayBase6.concat(thursdayValgfagExtra) : thursdayBase6;
+      }
+      // For Monday: later we will add extra for Valgfag 1. For now: "Not today".
+      return [];
+    }
+
+    function parseTimeHM(str){
       const [h,m]=str.split(":").map(Number);
       const d=new Date();
+      // respect timezone for display; for calculations local is fine since we only compare same-day HM
       d.setHours(h,m,0,0);
       return d;
     }
 
-    // Render plan
+    function isWeekend(day){ return day==="Saturday" || day==="Sunday"; }
+
     function renderPlan(){
-      const planList=document.getElementById("planList");
-      planList.innerHTML="";
-      document.getElementById("planTitle").textContent=`School Plan (by yevh) - ${selectedDay}`;
-      const schedule=schedules[selectedDay]||[];
-      const now=new Date();
+      const planTitle = document.getElementById('planTitle');
+      const planList = document.getElementById('planList');
+      planList.innerHTML = "";
+      planTitle.textContent = `School Plan (by yevh) - ${selectedDay}`;
+
+      // Weekend message
+      if(isWeekend(selectedDay)){
+        const msg = document.createElement('div');
+        msg.className = 'message';
+        msg.textContent = "Weekend — no school plan 🎉";
+        planList.appendChild(msg);
+        return;
+      }
+
+      const schedule = getScheduleFor(selectedDay);
+      const now = new Date();
+
+      if(schedule.length === 0){
+        // Not today message for days without plan yet
+        const msg = document.createElement('div');
+        msg.className = 'message';
+        msg.textContent = "Not today — plan not available yet";
+        planList.appendChild(msg);
+        return;
+      }
+
+      // If user clicks a day different from today's day, dim all items and show "Not today"
+      const isTodaySelected = selectedDay === new Date().toLocaleDateString('en-GB',{weekday:'long', timeZone:tz});
+
       schedule.forEach(item=>{
-        const start=parseTime(item.start);
-        const end=parseTime(item.end);
-        const div=document.createElement("div");
-        div.classList.add("item");
-        div.textContent=`${item.start} - ${item.end} ${item.subject}`;
-        if(now>end){div.classList.add("past");}
-        else if(now>=start && now<=end){div.classList.add("current");}
-        else{div.classList.add("future");}
+        const start = parseTimeHM(item.start);
+        const end   = parseTimeHM(item.end);
+        const div = document.createElement('div');
+        div.className = 'item';
+        div.innerHTML = `<span>${item.start} - ${item.end}</span><span>${item.subject}</span>`;
+
+        if(!isTodaySelected){
+          div.classList.add('dimmed');
+        } else {
+          if(now > end){ div.classList.add('past'); }
+          else if(now >= start && now <= end){ div.classList.add('current'); }
+          else { div.classList.add('future'); }
+        }
+
         planList.appendChild(div);
       });
+
+      if(!isTodaySelected){
+        const msg = document.createElement('div');
+        msg.className = 'message';
+        msg.style.marginTop = '8px';
+        msg.textContent = "Not today — plan not available yet";
+        planList.appendChild(msg);
+      }
     }
 
-    // Progress calculation
     function updateProgress(){
-      const schedule=schedules[selectedDay]||[];
-      if(schedule.length===0){document.getElementById("done").textContent="No lessons";document.getElementById("left").textContent="";return;}
-      const start=parseTime(schedule[0].start);
-      const end=parseTime(schedule[schedule.length-1].end);
-      const now=new Date();
-      let elapsed=0, remaining=0;
-      if(now<start){elapsed=0;remaining=(end-start)/60000;}
-      else if(now>end){elapsed=(end-start)/60000;remaining=0;}
-      else{elapsed=(now-start)/60000;remaining=(end-now)/60000;}
-      const eh=Math.floor(elapsed/60), em=Math.floor(elapsed%60);
-      const rh=Math.floor(remaining/60), rm=Math.floor(remaining%60);
-      document.getElementById("done").textContent=`Elapsed: ${eh}h ${em}m`;
-      document.getElementById("left").textContent=`Remaining: ${rh}h ${rm}m`;
+      const elapsedEl = document.getElementById('elapsed');
+      const remainingEl = document.getElementById('remaining');
+
+      if(isWeekend(selectedDay)){
+        elapsedEl.textContent = "Elapsed: 0h 0m";
+        remainingEl.textContent = "Remaining: Free day!";
+        return;
+      }
+
+      const schedule = getScheduleFor(selectedDay);
+      if(schedule.length === 0){
+        elapsedEl.textContent = "Elapsed: 0h 0m";
+        remainingEl.textContent = "Remaining: Not scheduled";
+        return;
+      }
+
+      const start = parseTimeHM(schedule[0].start);
+      const end   = parseTimeHM(schedule[schedule.length-1].end);
+      const now   = new Date();
+      let elapsedMin = 0, remainingMin = 0;
+
+      if(now <= start){ elapsedMin = 0; remainingMin = (end - start)/60000; }
+      else if(now >= end){ elapsedMin = (end - start)/60000; remainingMin = 0; }
+      else{ elapsedMin = (now - start)/60000; remainingMin = (end - now)/60000; }
+
+      const eh = Math.floor(elapsedMin/60), em = Math.floor(elapsedMin%60);
+      const rh = Math.floor(remainingMin/60), rm = Math.floor(remainingMin%60);
+
+      elapsedEl.textContent   = `Elapsed: ${eh}h ${em}m`;
+      remainingEl.textContent = `Remaining: ${rh}h ${rm}m`;
     }
 
-    setInterval(()=>{renderPlan();updateProgress();},1000);
-    renderPlan();updateProgress();
+    function renderAll(){
+      updateDayDate();
+      renderPlan();
+      updateProgress();
+    }
+
+    // Tick updates
+    setInterval(()=>{
+      updateBigClock();
+      renderAll();
+    }, 1000);
+
+    // Initial paint
+    updateBigClock();
+    renderAll();
   </script>
 </body>
 </html>
