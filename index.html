@@ -12,66 +12,71 @@
       display: flex;
     }
 
-    /* Clock */
-    #clock {
+    /* Top bar with days */
+    .topbar {
       position: fixed;
-      top: 15px;
-      left: 20px;
-      font-size: 18px;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 15px;
+    }
+    .day {
+      padding: 8px 15px;
+      border-radius: 6px;
+      background: #1a1a1a;
+      color: #888;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .day:hover { background: #333; color: #fff; }
+    .active { background: #00ffcc; color: #000; font-weight: bold; }
+
+    /* Clock circle */
+    .clock-circle {
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      border: 6px solid #00ffcc;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2em;
       font-weight: bold;
       color: #00ffcc;
-      text-shadow: 0 0 10px #00ffcc;
+      margin: 100px 20px;
+      box-shadow: 0 0 20px #00ffcc;
     }
 
-    /* Container */
+    /* Center plan */
     .container {
       flex: 1;
       display: flex;
       flex-direction: column;
       align-items: center;
-      margin-top: 60px;
+      margin-top: 80px;
     }
-
     h1 {
-      font-size: 2.5em;
+      font-size: 2em;
       color: #00ffcc;
-      margin-bottom: 30px;
-      text-shadow: 0 0 20px #00ffcc;
+      margin-bottom: 20px;
     }
-
-    /* Lessons list */
     .plan {
       width: 60%;
       display: flex;
       flex-direction: column;
       gap: 10px;
     }
-
     .item {
       padding: 12px 20px;
       border-radius: 8px;
       background: #1a1a1a;
-      transition: all 0.3s ease;
       display: flex;
       justify-content: space-between;
     }
-
-    .past {
-      background: #004d26;
-      color: #aaffaa;
-    }
-
-    .future {
-      background: #333;
-      color: #aaa;
-    }
-
-    .current {
-      background: #ff6600;
-      color: #fff;
-      font-weight: bold;
-      box-shadow: 0 0 15px #ff6600;
-    }
+    .past { background: #004d26; color: #aaffaa; }
+    .future { background: #333; color: #aaa; }
+    .current { background: #ff6600; color: #fff; font-weight: bold; box-shadow: 0 0 15px #ff6600; }
 
     /* Sidebar stats */
     .sidebar {
@@ -81,19 +86,23 @@
       color: #f0f0f0;
       box-shadow: -2px 0 10px #000;
     }
-
-    .stat {
-      margin: 10px 0;
-      font-size: 1.1em;
-    }
+    .stat { margin: 10px 0; font-size: 1.1em; }
   </style>
 </head>
 <body>
-  <div id="clock"></div>
+  <!-- Days selector -->
+  <div class="topbar" id="daysSelector"></div>
+
+  <!-- Clock circle -->
+  <div class="clock-circle" id="bigClock"></div>
+
+  <!-- Center plan -->
   <div class="container">
-    <h1>School Plan (by yevh)</h1>
+    <h1 id="planTitle">School Plan (by yevh)</h1>
     <div class="plan" id="planList"></div>
   </div>
+
+  <!-- Sidebar -->
   <div class="sidebar">
     <h2>Progress</h2>
     <div class="stat" id="done"></div>
@@ -101,79 +110,94 @@
   </div>
 
   <script>
-    function updateClock() {
-      const now = new Date();
-      const options = { 
-        timeZone: 'Europe/Berlin', // GMT+1
-        hour12: false, 
-        weekday: 'long', 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric', 
-        hour: '2-digit', 
-        minute: '2-digit', 
-        second: '2-digit' 
-      };
-      document.getElementById('clock').textContent = now.toLocaleString('en-GB', options);
+    // Schedules for days (example: only Wednesday filled)
+    const schedules = {
+      "Wednesday": [
+        { start: "08:00", end: "08:45", subject: "Matematik DB/TH" },
+        { start: "08:45", end: "09:30", subject: "Matematik DB/TH" },
+        { start: "09:30", end: "10:00", subject: "Break" },
+        { start: "10:00", end: "10:45", subject: "Biologi MAK" },
+        { start: "10:45", end: "11:30", subject: "Biologi MAK" },
+        { start: "11:30", end: "12:00", subject: "Break" },
+        { start: "12:00", end: "12:45", subject: "Dansk PW" },
+        { start: "12:45", end: "13:30", subject: "Dansk PW" },
+        { start: "13:30", end: "13:45", subject: "Break" },
+        { start: "13:45", end: "14:30", subject: "Tysk CB" },
+        { start: "14:30", end: "15:15", subject: "Tysk CB" }
+      ]
+    };
+
+    const days = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+    const todayName = new Date().toLocaleDateString('en-GB',{weekday:'long', timeZone:'Europe/Berlin'});
+    let selectedDay = todayName;
+
+    // Render days selector
+    const daysSelector = document.getElementById("daysSelector");
+    days.forEach(day=>{
+      const div=document.createElement("div");
+      div.classList.add("day");
+      if(day===selectedDay) div.classList.add("active");
+      div.textContent=day;
+      div.onclick=()=>{selectedDay=day; renderPlan(); updateProgress();};
+      daysSelector.appendChild(div);
+    });
+
+    // Clock circle
+    function updateBigClock(){
+      const now=new Date();
+      const options={timeZone:'Europe/Berlin',hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'};
+      document.getElementById("bigClock").textContent=now.toLocaleTimeString('en-GB',options);
     }
-    setInterval(updateClock, 1000);
-    updateClock();
+    setInterval(updateBigClock,1000);
+    updateBigClock();
 
-    // Wednesday plan
-    const schedule = [
-      { start: "08:00", end: "08:45", subject: "Matematik DB/TH" },
-      { start: "08:45", end: "09:30", subject: "Matematik DB/TH" },
-      { start: "09:30", end: "10:00", subject: "Break" },
-      { start: "10:00", end: "10:45", subject: "Biologi MAK" },
-      { start: "10:45", end: "11:30", subject: "Biologi MAK" },
-      { start: "11:30", end: "12:00", subject: "Break" },
-      { start: "12:00", end: "12:45", subject: "Dansk PW" },
-      { start: "12:45", end: "13:30", subject: "Dansk PW" },
-      { start: "13:30", end: "13:45", subject: "Break" },
-      { start: "13:45", end: "14:30", subject: "Tysk CB" },
-      { start: "14:30", end: "15:15", subject: "Tysk CB" }
-    ];
-
-    function parseTime(str) {
-      const [h, m] = str.split(":").map(Number);
-      const d = new Date();
-      d.setHours(h, m, 0, 0);
+    // Helpers
+    function parseTime(str){
+      const [h,m]=str.split(":").map(Number);
+      const d=new Date();
+      d.setHours(h,m,0,0);
       return d;
     }
 
-    function updatePlan() {
-      const now = new Date();
-      const planList = document.getElementById("planList");
-      planList.innerHTML = "";
-
-      let doneCount = 0;
-
-      schedule.forEach(item => {
-        const start = parseTime(item.start);
-        const end = parseTime(item.end);
-        const div = document.createElement("div");
+    // Render plan
+    function renderPlan(){
+      const planList=document.getElementById("planList");
+      planList.innerHTML="";
+      document.getElementById("planTitle").textContent=`School Plan (by yevh) - ${selectedDay}`;
+      const schedule=schedules[selectedDay]||[];
+      const now=new Date();
+      schedule.forEach(item=>{
+        const start=parseTime(item.start);
+        const end=parseTime(item.end);
+        const div=document.createElement("div");
         div.classList.add("item");
-        div.textContent = `${item.start} - ${item.end} ${item.subject}`;
-
-        if (now > end) {
-          div.classList.add("past");
-          doneCount++;
-        } else if (now >= start && now <= end) {
-          div.classList.add("current");
-          doneCount++;
-        } else {
-          div.classList.add("future");
-        }
-
+        div.textContent=`${item.start} - ${item.end} ${item.subject}`;
+        if(now>end){div.classList.add("past");}
+        else if(now>=start && now<=end){div.classList.add("current");}
+        else{div.classList.add("future");}
         planList.appendChild(div);
       });
-
-      document.getElementById("done").textContent = `Finished: ${doneCount}`;
-      document.getElementById("left").textContent = `Remaining: ${schedule.length - doneCount}`;
     }
 
-    setInterval(updatePlan, 1000);
-    updatePlan();
+    // Progress calculation
+    function updateProgress(){
+      const schedule=schedules[selectedDay]||[];
+      if(schedule.length===0){document.getElementById("done").textContent="No lessons";document.getElementById("left").textContent="";return;}
+      const start=parseTime(schedule[0].start);
+      const end=parseTime(schedule[schedule.length-1].end);
+      const now=new Date();
+      let elapsed=0, remaining=0;
+      if(now<start){elapsed=0;remaining=(end-start)/60000;}
+      else if(now>end){elapsed=(end-start)/60000;remaining=0;}
+      else{elapsed=(now-start)/60000;remaining=(end-now)/60000;}
+      const eh=Math.floor(elapsed/60), em=Math.floor(elapsed%60);
+      const rh=Math.floor(remaining/60), rm=Math.floor(remaining%60);
+      document.getElementById("done").textContent=`Elapsed: ${eh}h ${em}m`;
+      document.getElementById("left").textContent=`Remaining: ${rh}h ${rm}m`;
+    }
+
+    setInterval(()=>{renderPlan();updateProgress();},1000);
+    renderPlan();updateProgress();
   </script>
 </body>
 </html>
