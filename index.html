@@ -2,17 +2,17 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>GitHub Pages</title>
+  <title>School Plan (by yevh)</title>
   <style>
     body {
       margin: 0;
       font-family: 'Segoe UI', Arial, sans-serif;
       background: #0d0d0d;
       color: #f0f0f0;
-      overflow-x: hidden;
+      display: flex;
     }
 
-    /* Clock in top-left corner */
+    /* Clock */
     #clock {
       position: fixed;
       top: 15px;
@@ -21,68 +21,83 @@
       font-weight: bold;
       color: #00ffcc;
       text-shadow: 0 0 10px #00ffcc;
-      animation: fadeIn 2s ease-in-out;
     }
 
-    /* Center content */
+    /* Container */
     .container {
+      flex: 1;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      height: 100vh;
+      margin-top: 60px;
     }
 
     h1 {
-      font-size: 3em;
+      font-size: 2.5em;
       color: #00ffcc;
-      animation: glow 2s infinite alternate;
-      margin-bottom: 40px;
+      margin-bottom: 30px;
+      text-shadow: 0 0 20px #00ffcc;
     }
 
-    /* Days list */
-    .days {
+    /* Lessons list */
+    .plan {
+      width: 60%;
       display: flex;
-      gap: 15px;
+      flex-direction: column;
+      gap: 10px;
     }
 
-    .day {
-      padding: 15px 25px;
+    .item {
+      padding: 12px 20px;
       border-radius: 8px;
-      cursor: pointer;
       background: #1a1a1a;
-      color: #888;
       transition: all 0.3s ease;
+      display: flex;
+      justify-content: space-between;
     }
 
-    .day:hover {
+    .past {
+      background: #004d26;
+      color: #aaffaa;
+    }
+
+    .future {
       background: #333;
+      color: #aaa;
+    }
+
+    .current {
+      background: #ff6600;
       color: #fff;
-    }
-
-    .today {
-      background: #00ffcc;
-      color: #000;
       font-weight: bold;
-      box-shadow: 0 0 15px #00ffcc;
+      box-shadow: 0 0 15px #ff6600;
     }
 
-    @keyframes glow {
-      from { text-shadow: 0 0 10px #00ffcc; }
-      to { text-shadow: 0 0 30px #00ffcc, 0 0 60px #00ffcc; }
+    /* Sidebar stats */
+    .sidebar {
+      width: 250px;
+      background: #111;
+      padding: 20px;
+      color: #f0f0f0;
+      box-shadow: -2px 0 10px #000;
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
+    .stat {
+      margin: 10px 0;
+      font-size: 1.1em;
     }
   </style>
 </head>
 <body>
   <div id="clock"></div>
   <div class="container">
-    <h1>Welcome to GitHub Pages 🎉</h1>
-    <div class="days" id="daysList"></div>
+    <h1>School Plan (by yevh)</h1>
+    <div class="plan" id="planList"></div>
+  </div>
+  <div class="sidebar">
+    <h2>Progress</h2>
+    <div class="stat" id="done"></div>
+    <div class="stat" id="left"></div>
   </div>
 
   <script>
@@ -99,31 +114,66 @@
         minute: '2-digit', 
         second: '2-digit' 
       };
-      const timeString = now.toLocaleString('en-GB', options);
-      document.getElementById('clock').textContent = timeString;
+      document.getElementById('clock').textContent = now.toLocaleString('en-GB', options);
     }
     setInterval(updateClock, 1000);
     updateClock();
 
-    // Days of the week
-    const days = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
-    const todayIndex = new Date().getDay(); // Sunday=0, Monday=1...
+    // Wednesday plan
+    const schedule = [
+      { start: "08:00", end: "08:45", subject: "Matematik DB/TH" },
+      { start: "08:45", end: "09:30", subject: "Matematik DB/TH" },
+      { start: "09:30", end: "10:00", subject: "Break" },
+      { start: "10:00", end: "10:45", subject: "Biologi MAK" },
+      { start: "10:45", end: "11:30", subject: "Biologi MAK" },
+      { start: "11:30", end: "12:00", subject: "Break" },
+      { start: "12:00", end: "12:45", subject: "Dansk PW" },
+      { start: "12:45", end: "13:30", subject: "Dansk PW" },
+      { start: "13:30", end: "13:45", subject: "Break" },
+      { start: "13:45", end: "14:30", subject: "Tysk CB" },
+      { start: "14:30", end: "15:15", subject: "Tysk CB" }
+    ];
 
-    const daysList = document.getElementById("daysList");
-    days.forEach((day, i) => {
-      const div = document.createElement("div");
-      div.classList.add("day");
-      // Adjust index because JS Sunday=0
-      if ((i === 0 && todayIndex === 1) || (i === 1 && todayIndex === 2) || 
-          (i === 2 && todayIndex === 3) || (i === 3 && todayIndex === 4) || 
-          (i === 4 && todayIndex === 5) || (i === 5 && todayIndex === 6) || 
-          (i === 6 && todayIndex === 0)) {
-        div.classList.add("today");
-      }
-      div.textContent = day;
-      div.onclick = () => alert(day + " plan coming soon...");
-      daysList.appendChild(div);
-    });
+    function parseTime(str) {
+      const [h, m] = str.split(":").map(Number);
+      const d = new Date();
+      d.setHours(h, m, 0, 0);
+      return d;
+    }
+
+    function updatePlan() {
+      const now = new Date();
+      const planList = document.getElementById("planList");
+      planList.innerHTML = "";
+
+      let doneCount = 0;
+
+      schedule.forEach(item => {
+        const start = parseTime(item.start);
+        const end = parseTime(item.end);
+        const div = document.createElement("div");
+        div.classList.add("item");
+        div.textContent = `${item.start} - ${item.end} ${item.subject}`;
+
+        if (now > end) {
+          div.classList.add("past");
+          doneCount++;
+        } else if (now >= start && now <= end) {
+          div.classList.add("current");
+          doneCount++;
+        } else {
+          div.classList.add("future");
+        }
+
+        planList.appendChild(div);
+      });
+
+      document.getElementById("done").textContent = `Finished: ${doneCount}`;
+      document.getElementById("left").textContent = `Remaining: ${schedule.length - doneCount}`;
+    }
+
+    setInterval(updatePlan, 1000);
+    updatePlan();
   </script>
 </body>
 </html>
