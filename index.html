@@ -357,8 +357,8 @@
       return day === 'Saturday' || day === 'Sunday';
     }
 
-    // --- Schedules (base) ---
-    // Wednesday (as provided earlier)
+    // --- Schedules ---
+    // Wednesday
     const wednesdaySchedule = [
       { start: "08:00", end: "08:45", subject: "Matematik DB/TH" },
       { start: "08:45", end: "09:30", subject: "Matematik DB/TH" },
@@ -419,12 +419,22 @@
       { start: "14:30", end: "15:15", subject: "MAD 1 og Billed" }
     ];
 
+    // Tuesday schedule (user-provided) — starts at 10:00
+    const tuesdaySchedule = [
+      { start: "10:00", end: "10:45", subject: "Englesk DB" },
+      { start: "10:45", end: "11:30", subject: "Englesk DB" },
+      { start: "11:30", end: "12:00", subject: "Break" },
+      { start: "12:00", end: "12:45", subject: "Valgfag - Ekstra DB/PW" },
+      { start: "12:45", end: "13:30", subject: "Valgfag - Ekstra DB/PW" }
+    ];
+
     // Get schedule for a day, applying valgfag rules
     function getScheduleFor(day){
       if(day === 'Monday'){
         // If confirmed valgfag is Mad 1 og Billed, include extra lessons on Monday
         return (valgfag === 'Mad 1 og Billed') ? mondayBase.concat(mondayValgfagExtra) : mondayBase.slice();
       }
+      if(day === 'Tuesday') return tuesdaySchedule.slice();
       if(day === 'Wednesday') return wednesdaySchedule.slice();
       if(day === 'Thursday'){
         // If confirmed valgfag is Mad 2 og H/D, include extra lessons on Thursday
@@ -566,14 +576,6 @@
       updateBigClock();
       renderAll();
     }, 1000);
-
-    // Allow changing confirmed valgfag later:
-    // If user selects a different valgfag after confirming, enable confirm again
-    // (chooseValgfag already sets pendingValgfag and enables confirm)
-    // If user wants to clear selection, they can open devtools or we could add a "Clear" button later.
-
-    // Small UX: if user clicks the already-confirmed valgfag, allow re-confirm to keep it (no-op)
-    // If user wants to switch, they click the other valgfag then Confirm.
 
     // End of script
   </script>
