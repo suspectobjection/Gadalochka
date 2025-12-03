@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Мульти-скрипт пример</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    .block { margin-bottom: 30px; }
+    button { margin-top: 10px; }
+  </style>
+</head>
+<body>
+
+  <!-- Пара 1: Кнопка + JS -->
+  <div class="block">
+    <h2>Пара 1: Счётчик кликов</h2>
+    <button id="btn1">Нажми меня</button>
+    <p id="out1">Кликов: 0</p>
+  </div>
+
+  <!-- Пара 2: Ввод текста + JS -->
+  <div class="block">
+    <h2>Пара 2: Отображение текста</h2>
+    <input type="text" id="input2" placeholder="Напиши что-нибудь">
+    <p id="out2"></p>
+  </div>
+
+  <!-- Пара 3: Переключатель цвета + JS -->
+  <div class="block">
+    <h2>Пара 3: Переключение цвета</h2>
+    <button id="btn3">Сменить цвет</button>
+    <div id="box3" style="width:100px;height:100px;background:lightblue;"></div>
+  </div>
+
+  <!-- Пара 4: Простая математика + JS -->
+  <div class="block">
+    <h2>Пара 4: Сложение чисел</h2>
+    <input type="number" id="numA" placeholder="Число A">
+    <input type="number" id="numB" placeholder="Число B">
+    <button id="btn4">Сложить</button>
+    <p id="out4"></p>
+  </div>
+
+  <!-- Все скрипты -->
+  <script>
+    // Пара 1
+    let count = 0;
+    document.getElementById("btn1").onclick = () => {
+      count++;
+      document.getElementById("out1").textContent = "Кликов: " + count;
+    };
+
+    // Пара 2
+    document.getElementById("input2").oninput = (e) => {
+      document.getElementById("out2").textContent = "Ты написал: " + e.target.value;
+    };
+
+    // Пара 3
+    document.getElementById("btn3").onclick = () => {
+      const box = document.getElementById("box3");
+      box.style.background = box.style.background === "lightblue" ? "lightgreen" : "lightblue";
+    };
+
+    // Пара 4
+    document.getElementById("btn4").onclick = () => {
+      const a = parseFloat(document.getElementById("numA").value) || 0;
+      const b = parseFloat(document.getElementById("numB").value) || 0;
+      document.getElementById("out4").textContent = "Сумма: " + (a + b);
+    };
+  </script>
+
+</body>
+</html>
